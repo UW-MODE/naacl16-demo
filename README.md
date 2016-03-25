@@ -1,2 +1,2 @@
 # naacl16-demo
-LIME demonstration at NAACL 2016
+Data, classifiers, and notebooks for the LIME demonstration at NAACL 2016
