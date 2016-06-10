@@ -3,6 +3,11 @@ from flask import Flask, request, g, abort, render_template
 import collections
 import time
 import numpy as np
+import pickle
+import lime
+import lime.lime_text
+import lstm
+from sklearn.externals import joblib
 
 app = Flask(__name__)
 
@@ -41,26 +46,53 @@ def index():
 def explain():
     global explainer
     #print explainer.explain_instance(3)
-    print 'AE'
     params = request.get_json(force=True)
-    ret = {}
-    ret['left'] = explainer.explain_instance(params['text'])
-    ret['right'] = explainer.explain_instance(params['text'])
+    model_left = params['model_left']
+    model_right = params['model_right']
+    dataset = params['dataset'] 
+    text = params['text']
+    ret = {'left' : {}, 'right' : {}}
+    if model_left != 'none':
+        ret['left'] = explainer.explain_instance(dataset, model_left, text)
+    if model_left == model_right:
+        ret['right'] = ret['left']
+    else:
+        if model_right != 'none':
+            ret['right'] = explainer.explain_instance(dataset, model_right, text)
     return flask.json.jsonify(ret)
     
 class Explainer:
     def __init__(self):
         pass
-    def explain_instance(self, x):
-        pp = np.random.random(2)
-        pp = list(pp/pp.sum())
-        return {'explanation' : 
-               [(u'Posting', np.random.random() - .2),
-            (u'Host', -0.12142591429012933),
-            (u'NNTP', -0.10475224916045552),
-            (u'edu', -0.026189656073854678),
-            (u'University', 0.013130716499773369),
-            (u'There', -0.01089013711867517)], 'predict_proba' :pp}
+        self.models = joblib.load('models/models')
+        #self.models = pickle.load(open('models.pickle'))
+        self.real_models = {}
+        self.class_names = {}
+        for d in self.models:
+            self.class_names[d] = self.models[d]['class_names']
+            self.real_models[d] = {}
+            for m in ['lr', 'rf', 'svm']:
+                if m not in self.models[d]:
+                    continue
+                self.real_models[d][m] = lime.lime_text.ScikitClassifier(self.models[d][m]['model'], self.models[d]['vectorizer'])
+        DummyModel = collections.namedtuple('model', ['predict_proba'])
+        self.real_models['sentiment']['nn'] = DummyModel(lstm.GetLSTM())
+    def explain_instance(self, dataset, model, text):
+        if not model:
+            return {}
+        bow = model != 'nn'
+        np.random.seed(1)
+        #print self.real_models
+        explainer = lime.lime_text.LimeTextExplainer(class_names=['a','b'],
+                feature_selection='highest_weights', bow=bow)
+        exp = explainer.explain_instance(text,
+                self.real_models[dataset][model].predict_proba, num_features=5)
+        if bow:
+            exp_list = exp.as_list()
+        else:
+            exp_list = exp.as_list(positions=True)
+        pp = list(self.real_models[dataset][model].predict_proba([text])[0])
+        return {'explanation' : [('intercept', exp.intercept[1] - 0.5)] + exp_list, 'predict_proba' : pp}
 
 def main():
     global explainer

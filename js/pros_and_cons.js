@@ -2,16 +2,33 @@ import d3 from 'd3';
 import Barchart from './bar_chart.js';
 import {sortBy, range, isUndefined} from 'lodash';
 class ProsAndCons { 
-  constructor(exp, raw) {
+  constructor(exp, positions=false) {
     this.exp = exp;
-    this.raw = raw;
     this.class_colors = d3.scale.category10().domain(range(2))
+    this.positions = positions;
+  }
+  remove_underline(word_weight) {
+    let ret = []
+    for (let ww of word_weight) {
+      let word = ww[0];
+      let idx = word.lastIndexOf('_');
+      if (idx == -1) {
+        ret.push(ww);
+      }
+      else {
+        ret.push([word.substring(0, idx), ww[1]]);
+      }
+    }
+    return ret;
   }
   show(div) {
     div.html('');
     let svg = div.append('svg').style('width', '100%');
     let colors=[this.class_colors(0), this.class_colors(1)];
     let word_weight = this.exp['word_weight']
+    if (this.positions) {
+      word_weight = this.remove_underline(word_weight);
+    }
     let two_sided = !isUndefined(this.exp['two_sided'])
 
 
@@ -33,8 +50,34 @@ class ProsAndCons {
       svg.style('height', plot.svg_height);
     }
   }
+  show_raw_positions(div, text) {
+    div.html('');
+    let colors=[this.class_colors(0), this.class_colors(1)];
+    let word_weight = this.exp['word_weight']
+    let word_lists = [[], []]
+    for (let [word, weight] of this.exp['word_weight']) {
+      let idx = word.lastIndexOf('_')
+      if (idx == -1) {
+        continue;
+      }
+      let word2 = word.substring(0, idx);
+      let start = +(word.substring(idx+1))
+      let end = start + word2.length
+      if (weight > 0) {
+        word_lists[1].push([start, end]);
+      }
+      else {
+        word_lists[0].push([start, end]);
+      }
+    }
+    this.display_raw_text(div, text, word_lists, colors, true);
+  }
   // this.exp must have word_weight
   show_raw(div, text) {
+    if (this.positions) {
+      this.show_raw_positions(div, text);
+      return;
+    }
     div.html('');
     let colors=[this.class_colors(0), this.class_colors(1)];
     let word_weight = this.exp['word_weight']
@@ -47,8 +90,9 @@ class ProsAndCons {
         word_lists[0].push(word);
       }
     }
-    this.display_raw_text(div, this.raw, word_lists, colors);
+    this.display_raw_text(div, text, word_lists, colors);
   }
+
   // Words is an array of arrays, of length (colors). if with_positions is true,
   // words is an array of [start,end] positions instead
   display_raw_text(div, raw_text, word_lists=[], colors=[], positions=false) {
