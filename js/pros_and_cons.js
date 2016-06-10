@@ -1,16 +1,17 @@
 import d3 from 'd3';
-import Explanation from './explanation_interface.js';
 import Barchart from './bar_chart.js';
-import {isUndefined} from 'lodash';
-class ProsAndCons extends Explanation {
-  constructor(exp, raw, raw_type='text') {
-    super(exp, raw, raw_type=raw_type);
+import {sortBy, range, isUndefined} from 'lodash';
+class ProsAndCons { 
+  constructor(exp, raw) {
+    this.exp = exp;
+    this.raw = raw;
+    this.class_colors = d3.scale.category10().domain(range(2))
   }
   show(div) {
+    div.html('');
     let svg = div.append('svg').style('width', '100%');
     let colors=[this.class_colors(0), this.class_colors(1)];
-    console.log(colors);
-    let word_weight = this.exp['feature_word_weight'].map(x => [x[1], x[2]]);
+    let word_weight = this.exp['word_weight']
     let two_sided = !isUndefined(this.exp['two_sided'])
 
 
@@ -32,27 +33,70 @@ class ProsAndCons extends Explanation {
       svg.style('height', plot.svg_height);
     }
   }
-  // this.exp must have class and feature_word_weight
-  show_raw(div) {
-    let colors=['#5F9EA0', this.class_colors(this.exp['class'])];
+  // this.exp must have word_weight
+  show_raw(div, text) {
+    div.html('');
+    let colors=[this.class_colors(0), this.class_colors(1)];
+    let word_weight = this.exp['word_weight']
     let word_lists = [[], []]
-    let colors_obj = {}
-    for (let [feature, word, weight] of this.exp['feature_word_weight']) {
+    for (let [word, weight] of this.exp['word_weight']) {
       if (weight > 0) {
         word_lists[1].push(word);
-        colors_obj[feature] = colors[1]
       }
       else {
         word_lists[0].push(word);
-        colors_obj[feature] = colors[0]
       }
     }
-    if (this.raw_type == 'text') {
-      this.display_raw_text(div, this.raw, word_lists, colors);
+    this.display_raw_text(div, this.raw, word_lists, colors);
+  }
+  // Words is an array of arrays, of length (colors). if with_positions is true,
+  // words is an array of [start,end] positions instead
+  display_raw_text(div, raw_text, word_lists=[], colors=[], positions=false) {
+    div.classed('lime', true).classed('text_div', true);
+    div.append('h3').text('Text with highlighted words');
+    let highlight_tag = 'span';
+    let text_span = div.append('span').text(raw_text);
+    let position_lists = word_lists;
+    if (!positions) {
+      position_lists = this.wordlists_to_positions(word_lists, raw_text);
     }
-    else if (this.raw_type == 'tabular') {
-      this.display_raw_tabular(div, this.raw, colors_obj);
+    let objects = []
+    for (let i of range(position_lists.length)) {
+      position_lists[i].map(x => objects.push({'label' : i, 'start': x[0], 'end': x[1]}));
     }
+    objects = sortBy(objects, x=>x['start']);
+    let node = text_span.node().childNodes[0];
+    let subtract = 0;
+    for (let obj of objects) {
+      let word = raw_text.slice(obj.start, obj.end);
+      let start = obj.start - subtract;
+      let end = obj.end - subtract;
+      let match = document.createElement(highlight_tag);
+      match.appendChild(document.createTextNode(word));
+      match.style.backgroundColor = colors[obj.label];
+      let after = node.splitText(start);
+      after.nodeValue = after.nodeValue.substring(word.length);
+      node.parentNode.insertBefore(match, after);
+      subtract += end;
+      node = after;
+    }
+  }
+  wordlists_to_positions(word_lists, raw_text) {
+    let ret = []
+    for(let words of word_lists) {
+      if (words.length === 0) {
+        ret.push([]);
+        continue;
+      }
+      let re = new RegExp("\\b(" + words.join('|') + ")\\b",'igm')
+      let temp;
+      let list = [];
+      while ((temp = re.exec(raw_text)) !== null) {
+        list.push([temp.index, temp.index + temp[0].length]);
+      }
+      ret.push(list);
+    }
+    return ret;
   }
 }
 export default ProsAndCons;

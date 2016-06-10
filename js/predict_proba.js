@@ -5,19 +5,10 @@ class PredictProba {
   // svg: d3 object with the svg in question
   // class_names: array of class names
   // predict_probas: array of prediction probabilities
-  constructor(svg, class_names, predict_probas, title='Prediction probabilities') {
+  constructor(svg, class_names, title='Prediction probabilities') {
     let width = parseInt(svg.style('width'));
     this.names = class_names;
-    this.names.push('Other');
-    if (class_names.length < 10) {
-      this.colors = d3.scale.category10().domain(this.names);
-      this.colors_i = d3.scale.category10().domain(range(this.names.length));
-    }
-    else {
-      this.colors = d3.scale.category20().domain(this.names);
-      this.colors_i = d3.scale.category20().domain(range(this.names.length));
-    }
-    let [names, data] = this.map_classes(this.names, predict_probas);
+    this.colors_i = d3.scale.category10().domain(range(2))
     this.bar_x = width - 125;
     let class_names_width = this.bar_x;
     let bar_width = width - this.bar_x - 32;
@@ -25,7 +16,7 @@ class PredictProba {
     this.bar_height = 17;
     this.space_between_bars = 5;
     this.bar_yshift= title === '' ? 0 : 35;
-    let n_bars = Math.min(5, data.length);
+    let n_bars = 2;
     this.svg_height = n_bars * (this.bar_height + this.space_between_bars) + this.bar_yshift;
     svg.style('height', this.svg_height + 'px');
     let this_object = this;
@@ -37,13 +28,8 @@ class PredictProba {
     }
     this.bar_y = i => (this.bar_height + this.space_between_bars) * i + this.bar_yshift;
     this.bar = svg.append("g");
-    this.update(predict_probas);
-
-    for (let i of range(data.length)) {
-      var color = this.colors(names[i]);
-      if (names[i] == 'Other' && this.names.length > 20) {
-          color = '#5F9EA0';
-      }
+    this.update([0.1,.1])
+    for (let i of range(2)) {
       this.bar.append("rect").attr("x", this.bar_x)
           .attr("y", this.bar_y(i))
           .attr("height", this_object.bar_height)
@@ -54,13 +40,14 @@ class PredictProba {
   }
   update(predict_probas) {
     let this_object = this;
-    let [names, data] = this.map_classes(this.names, predict_probas);
+    let names = this.names
+    let data = predict_probas
     let rect = this.bar.selectAll('.colored_rects').data(data)
     rect.enter().append('rect').classed('colored_rects', true)
     rect.attr("x", this_object.bar_x)
           .attr("y", (d, i) => this_object.bar_y(i))
           .attr("height", this_object.bar_height)
-          .style("fill", (d, i) => this_object.colors(names[i]))
+          .style("fill", (d, i) => this_object.colors_i(i))
     rect.transition().duration(1000).attr("width", d => this_object.x_scale(d))
     let prob_text = this.bar.selectAll('.prob_texts').data(data)
     prob_text.enter().append('text').classed('prob_texts', true)
@@ -80,31 +67,6 @@ class PredictProba {
           .style("font", "14px tahoma, sans-serif")
           .text((d, i) => names[i]);
   }
-  map_classes(class_names, predict_proba) {
-    if (class_names.length <= 6) {
-      return [class_names, predict_proba];
-    }
-    let class_dict = range(predict_proba.length).map(i => ({'name': class_names[i], 'prob': predict_proba[i], 'i' : i}));
-    let sorted = sortBy(class_dict, d =>  -d.prob);
-    let other = new Set();
-    range(4, sorted.length).map(d => other.add(sorted[d].name));
-    let other_prob = 0;
-    let ret_probs = [];
-    let ret_names = [];
-    for (let d of range(sorted.length)) {
-      if (other.has(sorted[d].name)) {
-        other_prob += sorted[d].prob;
-      }
-      else {
-        ret_probs.push(sorted[d].prob);
-        ret_names.push(sorted[d].name);
-      }
-    };
-    ret_names.push("Other");
-    ret_probs.push(other_prob);
-    return [ret_names, ret_probs];
-  }
-  
 }
 export default PredictProba;
 

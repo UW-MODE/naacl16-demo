@@ -2,6 +2,7 @@ import flask
 from flask import Flask, request, g, abort, render_template
 import collections
 import time
+import numpy as np
 
 app = Flask(__name__)
 
@@ -42,19 +43,28 @@ def explain():
     #print explainer.explain_instance(3)
     print 'AE'
     params = request.get_json(force=True)
-    return flask.json.jsonify(explainer.explain_instance(params['text']))
+    ret = {}
+    ret['left'] = explainer.explain_instance(params['text'])
+    ret['right'] = explainer.explain_instance(params['text'])
+    return flask.json.jsonify(ret)
     
+class Explainer:
+    def __init__(self):
+        pass
+    def explain_instance(self, x):
+        pp = np.random.random(2)
+        pp = list(pp/pp.sum())
+        return {'explanation' : 
+               [(u'Posting', np.random.random() - .2),
+            (u'Host', -0.12142591429012933),
+            (u'NNTP', -0.10475224916045552),
+            (u'edu', -0.026189656073854678),
+            (u'University', 0.013130716499773369),
+            (u'There', -0.01089013711867517)], 'predict_proba' :pp}
+
 def main():
-    Explainer = collections.namedtuple('Explainer', ['explain_instance'])
     global explainer
-    explanation = {'explanation' : 
-[(u'Posting', -0.15781097394174123),
- (u'Host', -0.12142591429012933),
- (u'NNTP', -0.10475224916045552),
- (u'edu', -0.026189656073854678),
- (u'University', 0.013130716499773369),
- (u'There', -0.01089013711867517)], 'predict_proba' :[.4,.6]}
-    explainer = Explainer(lambda x: explanation)
+    explainer = Explainer()
     app.run(debug=True, port=8112)
 
 if __name__ == '__main__':
