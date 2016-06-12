@@ -7,6 +7,7 @@ import pickle
 import lime
 import lime.lime_text
 import lstm
+import argparse
 from sklearn.externals import joblib
 
 app = Flask(__name__)
@@ -62,8 +63,10 @@ def explain():
     return flask.json.jsonify(ret)
     
 class Explainer:
-    def __init__(self):
-        pass
+    def __init__(self, dummy=False):
+        self.dummy = dummy
+        if dummy:
+            return
         self.models = joblib.load('models/models')
         #self.models = pickle.load(open('models.pickle'))
         self.real_models = {}
@@ -78,6 +81,12 @@ class Explainer:
         DummyModel = collections.namedtuple('model', ['predict_proba'])
         self.real_models['sentiment']['nn'] = DummyModel(lstm.GetLSTM())
     def explain_instance(self, dataset, model, text):
+        if self.dummy:
+            pp = np.random.random(2)
+            pp = list(pp / pp.sum())
+            exp_list = [('bla', 0.3), ('ble', -0.3), ('bli', 0.2), ('blo', 0.1), ('blu', 0.01)]
+            return {'explanation' : [('intercept', .2 - 0.5)] + exp_list, 'predict_proba' : pp}
+
         if not model:
             return {}
         bow = model != 'nn'
@@ -86,7 +95,7 @@ class Explainer:
         explainer = lime.lime_text.LimeTextExplainer(class_names=['a','b'],
                 feature_selection='highest_weights', bow=bow)
         exp = explainer.explain_instance(text,
-                self.real_models[dataset][model].predict_proba, num_features=5)
+                self.real_models[dataset][model].predict_proba, num_features=5, num_samples=2000)
         if bow:
             exp_list = exp.as_list()
         else:
@@ -96,7 +105,10 @@ class Explainer:
 
 def main():
     global explainer
-    explainer = Explainer()
+    parser = argparse.ArgumentParser(description='Do some stuff')
+    parser.add_argument('-dummy', '-d', action='store_true', help='If present, return dummy explanations')
+    args = parser.parse_args()
+    explainer = Explainer(args.dummy)
     app.run(debug=True, port=8112)
 
 if __name__ == '__main__':

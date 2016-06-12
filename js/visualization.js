@@ -6,7 +6,12 @@ class Visualization {
     let self = this;
     this.left = Object()
     this.right = Object()
+    this.current_suggestions=[{'text' : ''}]
 
+    this.model_left='none';
+    this.model_right='none';
+
+    this.class_names = {'20ng' : ['Atheism', 'Christian'], 'politeness':  ['rude', 'polite'], 'sentiment' : ['negative', 'positive']}
     // Buttons
     this.dataset_map = {'Religion' : '20ng', 'Politeness' : 'politeness', 'Sentiment' : 'sentiment'};
     let dataset_div = d3.select('#datasets_div')
@@ -16,6 +21,8 @@ class Visualization {
         .text(d => d)
         .on('click', d => self.update_dataset(d))
     let button = d3.select('#buttons_div').append('button')
+    button.classed('suggestion_btn', true)
+    button.text('GO')
     button.on('click', () => this.send_request());
     
     // Text area
@@ -28,11 +35,12 @@ class Visualization {
     this.model_map = {'none' : 'none', 'Logistic Regression' : 'lr', 'Random Forest' : 'rf', 'SVM RBF' : 'svm', 'NN on Embeddings' : 'nn'} 
     this.build_side(this.left, '#left_model_div');
     this.build_side(this.right, '#right_model_div');
+    this.update_side('left', '', '')
+    this.update_side('right', '', '')
 
     d3.json("static/suggestions.json", function(error, json) {
       self.suggestions = json;
       self.update_dataset('Religion');
-      self.update_suggestions();
     })
   }
   update_dataset(dataset) {
@@ -40,8 +48,10 @@ class Visualization {
     this.update_suggestions()
     this.update_model_options(this.left);
     this.update_model_options(this.right);
+    this.left.predict_proba.names = this.class_names[this.dataset]
+    this.right.predict_proba.names = this.class_names[this.dataset]
     // Sends request
-    this.update_text(this.suggestions[this.dataset][0]['text']);
+    this.update_text(this.current_suggestions[0]['text']);
   }
   update_model_options(side_object) {
     let self = this;
@@ -50,13 +60,30 @@ class Visualization {
       .enter()
       .append('option')
       .text(d=> d)
-    side_object.model_select.on('change', d=> self.send_request());
+    side_object.model_select.on('change', function(d) {
+       self.send_request();
+       self.update_suggestions();
+    });
   }
   update_suggestions() {
     let self = this;
+    let sides = []
+    if (self.model_left != 'none') {
+      sides.push(self.model_left);
+    }
+    if (self.model_right != 'none' && self.model_right != self.model_left) {
+      sides.push(self.model_right);
+    }
+    sides.sort()
+    let model_comb = sides.join('-');
     let div = d3.select('#suggestions_div');
     div.html('');
-    div.selectAll('span').data(self.suggestions[self.dataset])
+    if (model_comb == '') {
+      self.current_suggestions=[{'text' : ''}]
+      return;
+    }
+    self.current_suggestions = self.suggestions[self.dataset][model_comb];
+    div.selectAll('span').data(self.suggestions[self.dataset][model_comb])
        .enter().append('span')
        .classed('suggestion_btn', true)
        .text(d => d['title'])
@@ -73,6 +100,9 @@ class Visualization {
     this.model_right = this.model_map[this.right.model_select.property('value')];
     // %TODO
     let params = {'text' : text, 'dataset' : this.dataset, 'model_left' : self.model_left, 'model_right': self.model_right};
+    if (text == '') {
+      return;
+    }
     this.start_loading(800);
     params = JSON.stringify(params);
     d3.xhr("api/explain", "application/json").post(params, function(error, data) {

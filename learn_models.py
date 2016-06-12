@@ -10,7 +10,7 @@ import random
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.externals import joblib
 
-def LoadPoliteness(path, percent_test=.05):
+def LoadPoliteness(path, percent_test=.1):
     data = []
     labels = []
     with open(path) as csvfile:
@@ -101,7 +101,7 @@ def LoadSentimentFile(path):
     data = []
     labels = []
     for line in open(path):
-        x, y = line.strip().split('\t')
+        x, y = line.decode('utf-8', 'ignore').strip().split('\t')
         data.append(x)
         labels.append(int(y))
     return data, labels
