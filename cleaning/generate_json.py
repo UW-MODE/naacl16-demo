@@ -43,32 +43,35 @@ def get_pretty_instance(raw_data, exp, vectorizer):
     return re.sub('\n', '<br />', new)
 
 
-data = pickle.load(open('../submodular_20.pickle'))
-train, train_labels, test, test_labels = Load20NG()
-vectorizer = sklearn.feature_extraction.text.CountVectorizer(binary=True,
-        lowercase=False) 
-vectorizer.fit(train + test)                                                          
-train_vectors = vectorizer.transform(train)
-test_vectors = vectorizer.transform(test)                                             
-svm = sklearn.svm.SVC(probability=True, kernel='rbf', C=10,gamma=0.001)               
-svm.fit(train_vectors, train_labels)                                                  
-
-json_ret = {}
-json_ret['class_names'] = ['Atheism', 'Christianity']
-json_ret['instances'] = []
-explanations = data['explanations']['20ng']['svm'][:10]
-idxs = data['submodular_idx']['20ng']['svm'][:10]
-for z, i in enumerate(idxs):
-    json_obj = {}
-    json_obj['id'] = i
-    idx = i
-    instance = test_vectors[idx]
-    json_obj['true_class'] = test_labels[idx]
-    json_obj['c1'] = {}
-    json_obj['c1']['predict_proba'] = list(svm.predict_proba(test_vectors[0])[0])
-    exp = explanations[z]
-    json_obj['c1']['exp'] = exp 
-    json_obj['c1']['data'] = get_pretty_instance(test[idx], exp, vectorizer)
-    json_ret['instances'].append(json_obj)
-import json
-open('exp2_local.json', 'w').write('data = %s' % json.dumps(json_ret))
+def main():
+    data = pickle.load(open('../submodular_20.pickle'))
+    train, train_labels, test, test_labels = Load20NG()
+    vectorizer = sklearn.feature_extraction.text.CountVectorizer(binary=True,
+            lowercase=False) 
+    vectorizer.fit(train + test)                                                          
+    train_vectors = vectorizer.transform(train)
+    test_vectors = vectorizer.transform(test)                                             
+    svm = sklearn.svm.SVC(probability=True, kernel='rbf', C=10,gamma=0.001)               
+    svm.fit(train_vectors, train_labels)                                                  
+    
+    json_ret = {}
+    json_ret['class_names'] = ['Atheism', 'Christianity']
+    json_ret['instances'] = []
+    explanations = data['explanations']['20ng']['svm'][:10]
+    idxs = data['submodular_idx']['20ng']['svm'][:10]
+    for z, i in enumerate(idxs):
+        json_obj = {}
+        json_obj['id'] = i
+        idx = i
+        instance = test_vectors[idx]
+        json_obj['true_class'] = test_labels[idx]
+        json_obj['c1'] = {}
+        json_obj['c1']['predict_proba'] = list(svm.predict_proba(test_vectors[0])[0])
+        exp = explanations[z]
+        json_obj['c1']['exp'] = exp 
+        json_obj['c1']['data'] = get_pretty_instance(test[idx], exp, vectorizer)
+        json_ret['instances'].append(json_obj)
+    import json
+    open('exp2_local.json', 'w').write('data = %s' % json.dumps(json_ret))
+if __name__ == '__main__':
+    main()
