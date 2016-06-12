@@ -72,6 +72,6 @@ def main():
         json_obj['c1']['data'] = get_pretty_instance(test[idx], exp, vectorizer)
         json_ret['instances'].append(json_obj)
     import json
-    open('exp2_local.json', 'w').write('data = %s' % json.dumps(json_ret))
+    open('static/exp2_local.json', 'w').write('data = %s' % json.dumps(json_ret))
 if __name__ == '__main__':
     main()
