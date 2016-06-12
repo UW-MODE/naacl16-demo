@@ -57,17 +57,17 @@ def main():
     json_ret = {}
     json_ret['class_names'] = ['Atheism', 'Christianity']
     json_ret['instances'] = []
-    explanations = data['explanations']['20ng']['svm'][:10]
+    explanations = data['explanations']['20ng']['svm']
     idxs = data['submodular_idx']['20ng']['svm'][:10]
-    for z, i in enumerate(idxs):
+    for i in idxs:
         json_obj = {}
         json_obj['id'] = i
         idx = i
         instance = test_vectors[idx]
         json_obj['true_class'] = test_labels[idx]
         json_obj['c1'] = {}
-        json_obj['c1']['predict_proba'] = list(svm.predict_proba(test_vectors[0])[0])
-        exp = explanations[z]
+        json_obj['c1']['predict_proba'] = list(svm.predict_proba(test_vectors[idx])[0])
+        exp = explanations[idx]
         json_obj['c1']['exp'] = exp 
         json_obj['c1']['data'] = get_pretty_instance(test[idx], exp, vectorizer)
         json_ret['instances'].append(json_obj)
