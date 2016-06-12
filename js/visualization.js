@@ -15,14 +15,19 @@ class Visualization {
     // Buttons
     this.dataset_map = {'Religion' : '20ng', 'Politeness' : 'politeness', 'Sentiment' : 'sentiment'};
     let dataset_div = d3.select('#datasets_div')
-    dataset_div.selectAll('span').data(['Religion', 'Politeness', 'Sentiment'])
-        .enter().append('span')
-        .classed('suggestion_btn', true)
+    dataset_div.selectAll('li').data(['Religion', 'Politeness', 'Sentiment'])
+        .enter().append('li')
+        .append('a')
+        .classed('tablink', true)
         .text(d => d)
-        .on('click', d => self.update_dataset(d))
-    let button = d3.select('#buttons_div').append('button')
-    button.classed('suggestion_btn', true)
-    button.text('GO')
+        .on('click', function(d) {
+          d3.select('#datasets_div').selectAll('a').classed('active', false);
+          d3.select(this).classed('active', true);
+          self.update_dataset(d)
+        })
+    let button = d3.select('#explain_button_div').append('button')
+    button.classed('btn', true)
+    button.text('Explain')
     button.on('click', () => this.send_request());
     
     // Text area
@@ -50,6 +55,7 @@ class Visualization {
     this.update_model_options(this.right);
     this.left.predict_proba.names = this.class_names[this.dataset]
     this.right.predict_proba.names = this.class_names[this.dataset]
+    this.left.model_select.property('value', 'Logistic Regression');
     // Sends request
     this.update_text(this.current_suggestions[0]['text']);
   }
@@ -83,11 +89,16 @@ class Visualization {
       return;
     }
     self.current_suggestions = self.suggestions[self.dataset][model_comb];
-    div.selectAll('span').data(self.suggestions[self.dataset][model_comb])
-       .enter().append('span')
-       .classed('suggestion_btn', true)
+    div.selectAll('li').data(self.suggestions[self.dataset][model_comb])
+       .enter().append('li')
+       .append('a')
+       .classed('tablink', true)
        .text(d => d['title'])
-       .on('click', d => self.update_text(d['text']));
+       .on('click', function(d) {
+          d3.select('#suggestions_div').selectAll('a').classed('active', false);
+          d3.select(this).classed('active', true);
+         self.update_text(d['text'])
+       });
   }
   update_text(text) {
     this.textarea.node().value = text;
@@ -135,7 +146,7 @@ class Visualization {
     explanation.show_raw(side.text_div, text);
   }
   build_side(side_object, div_id) {
-    let div = d3.select(div_id);
+    let div = d3.select(div_id).classed('model', true);
     let select_width = 130;
     side_object.model_select = div.append('div').style('float', 'left').style('width', select_width + 'px').append('select');
     let total_width = parseInt(div.style('width'))

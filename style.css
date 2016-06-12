@@ -1,10 +1,22 @@
+#models_div {
+  clear: both;
+}
+
+.model {
+  border: dashed 1px #ccc;
+  border-radius: 8px;
+  padding: 10px;
+}
+
 #left_model_div {
-  width: 50%;
+  width: calc(50% - 30px);
   float:left;
+  margin-right:2px;
 }
 #right_model_div {
-  width: 50%;
+  width: calc(50% - 30px);
   float:left;
+  margin-left:2px;
 }
 
 #top_part_div{
@@ -13,18 +25,78 @@
   margin-bottom: 20px;
   clear:both;
 }
-#buttons_div {
-  width: 200px;
+
+#datasets_div {
   float:left;
-  height:100%;
+  clear:both;
+  width:99%;
+  height:30px;
+  margin-bottom: 10px;
 }
+
+#edit_div {
+  clear: both;
+  width: 100%;
+  height: calc(100% - 35px);
+  position: relative;
+}
+
+#explain_button_div {
+  /*width: 200px;*/
+  float:left;
+}
+
+#explain_button_div .btn {
+  bottom: 0;
+  position:absolute;
+}
+
+/* Style the list */
+ul.tab {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    -webkit-border-radius: 8;
+    -moz-border-radius: 8;
+    border-radius: 8px;
+}
+
+/* Float the list items side by side */
+ul.tab li {float: left;}
+
+/* Style the links inside the list items */
+ul.tab li a {
+    display: inline-block;
+    color: black;
+    text-align: center;
+    padding: 5px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+/* Change background color of links on hover */
+ul.tab li a:hover {background-color: #ddd;}
+
+/* Create an active/current tablink class */
+ul.tab li a:focus, .active {background-color: #ccc;}
 
 #input_text_div {
   width: 400px;
-  margin-right: 30px;
+  margin-left: 10px;
+  margin-right: 10px;
   height:100%;
   float:left;
 }
+#input_text_div textarea {
+  -webkit-border-radius: 8;
+  -moz-border-radius: 8;
+  border-radius: 8px;
+}
+
 #suggestions_div{
   width: 300px;
   height:100%;
@@ -35,35 +107,35 @@
   all: initial;
 }
 .lime.text_div {
+  /*border-top: 1px solid #202020;
+  -webkit-box-shadow: 0px 1px 1px rgba(50, 50, 50, 0.75);
+  -moz-box-shadow:    0px 1px 1px rgba(50, 50, 50, 0.75);
+  box-shadow:         0px 1px 1px rgba(50, 50, 50, 0.75);*/
+
+
   max-height:300px;
+  margin-top:10px;
   overflow-y:scroll;
   white-space:pre-wrap;
 }
 
-.suggestion_btn {
-  -moz-box-shadow:inset 0px 1px 0px 0px #9acc85;
-  -webkit-box-shadow:inset 0px 1px 0px 0px #9acc85;
-  box-shadow:inset 0px 1px 0px 0px #9acc85;
-  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #74ad5a), color-stop(1, #68a54b));
-  background:-moz-linear-gradient(top, #74ad5a 5%, #68a54b 100%);
-  background:-webkit-linear-gradient(top, #74ad5a 5%, #68a54b 100%);
-  background:-o-linear-gradient(top, #74ad5a 5%, #68a54b 100%);
-  background:-ms-linear-gradient(top, #74ad5a 5%, #68a54b 100%);
-  background:linear-gradient(to bottom, #74ad5a 5%, #68a54b 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#74ad5a', endColorstr='#68a54b',GradientType=0);
-  background-color:#74ad5a;
-  border:1px solid #3b6e22;
-  display:inline-block;
-  cursor:pointer;
-  color:#ffffff;
-  font-family:Arial;
-  font-size:13px;
-  font-weight:bold;
-  padding:6px 12px;
-  margin-right:5px;
-  width: calc(100% - 24px - 2px);
-  margin-bottom:5px;
-  text-decoration:none;
+.btn {
+  border: 0px;
+  -webkit-border-radius: 8;
+  -moz-border-radius: 8;
+  border-radius: 8px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 15px;
+  background: #38bd24;
+  padding: 5px 10px 5px 10px;
+  text-decoration: none;
+  margin: 3px;
+}
+
+.btn:hover {
+  background: #42d665;
+  text-decoration: none;
 }
 
 

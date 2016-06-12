@@ -1,0 +1,325 @@
+#fixed-header {
+  width: calc(97% + 5px); /*100%;*/
+  background: #fff;
+  min-height: 54px;
+
+  /*border-bottom: 1px dashed;*/
+  box-shadow: 3px 3px 3px #999999; 
+}
+
+/* Instance info */
+
+.trip-prev, .trip-next {
+  color: #DDD;
+}
+#intro {
+  width: 600px;
+  font-size: 15pt;
+}
+#form_div  {
+  font-size: 15pt;
+}
+#intro {
+  width: 600px;
+  font-size: 15pt;
+}
+#instance_info {
+  text-align: center;
+  vertical-align: middle;
+  margin: 5px;
+}
+
+.box {
+  display: inline-block;
+  margin: 5px;
+  padding: 5px;
+}
+.space {
+  margin: 10px 10px 10px 10px;
+  padding: 5px;
+}
+
+.true_class {
+  margin: 3px;
+  vertical-align: top;
+}
+
+.example {
+  float: left;
+}
+
+.example_id {
+  color: #999;
+}
+
+#true_class_svg {
+
+}
+
+.button-group {
+  display: inline-block;
+  float: right;
+}
+
+/*  */
+
+#explanations {
+  height: auto;
+}
+
+
+.classifier_header {
+  text-align: center;
+  font-weight: bold;
+  margin: 10px 0px;
+  font-size: large;
+}
+
+.classifier {
+  width: 48.5%;
+  float:left;
+  padding-bottom: 15px;
+  margin-right: 3px;
+  border-bottom: 1px dashed;
+  border-right: 1px solid;
+  border-left: 1px solid;
+  border-top: 1px solid;
+  border-color: gray;
+  background-color: white;
+  border-top-right-radius:5px;
+  border-top-left-radius:5px;
+}
+
+#c1 {
+}
+
+#c2 {
+}
+
+.pred, .correct_mark {
+  height: 40px;
+  padding-top: 10px;
+}
+
+table {
+  margin-left: 15px;
+}
+
+td, th {
+  vertical-align: top;
+  text-align: left;
+}
+
+.title {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.class {
+  width: 40%;
+  float: left;
+}
+
+.explanation {
+  width: 40%;
+  float: left;
+}
+
+#explain1 {
+  min-width:280px;
+  /*float:right;*/
+}
+#explain2 {
+  min-width:280px;
+  /*float:left;*/
+}
+
+/*********** end of fixed header ***********/
+
+/* Text */
+
+.active_text {
+  display: inline-table;
+  clear: right;
+  margin: 2px 2px 2px 2px;
+  border-radius: 10px; 
+  -moz-border-radius: 10px; 
+  -webkit-border-radius: 10px; 
+  padding:2px;
+  border: 2px solid #808080;
+}
+
+#explain_text_div {
+  height: 250px;
+  overflow: scroll;
+  clear: both;
+}
+
+.explain_text {
+  /* 35 px for the arrows, 150 for the prediction bar*/
+  /*height:calc(100% - 22px);*/
+  margin: 0px 3px 0px 0px;
+  border-right: 1px solid;
+  border-left: 1px solid;
+  border-bottom: 1px solid;
+  border-color: gray;
+  background-color: white;
+  border-bottom-right-radius:5px;
+  border-bottom-left-radius:5px;
+  padding: 10px;
+  width: calc(48.5% - 20px);
+  float: left;
+}
+
+.btn {
+  background: #3498db;
+  background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
+  background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+  background-image: -ms-linear-gradient(top, #3498db, #2980b9);
+  background-image: -o-linear-gradient(top, #3498db, #2980b9);
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 12px;
+  background: #3498db;
+  padding: 5px 10px 5px 10px;
+  text-decoration: none;
+  border: none;
+}
+
+.btn:hover {
+  background: #3cb0fd;
+  background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+.hidden {
+  display: none;
+}
+
+/* Form labels on top */
+.form-labels-on-top{
+    box-sizing: border-box;
+    max-width: 475px;
+    margin: 0 auto;
+    padding: 35px;
+
+    background-color:  #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+
+    font: bold 14px sans-serif;
+    text-align: center;
+}
+
+.form-labels-on-top .form-row{
+    text-align: left;
+    max-width: 315px;
+    margin: 25px auto 0;
+}
+
+.form-labels-on-top .form-title-row{
+    margin: 0 auto 20px;
+}
+
+.form-labels-on-top h1{
+    display: inline-block;
+    box-sizing: border-box;
+    color: #4C565E;
+    font-size: 24px;
+    padding: 0 0 5px 0;
+    margin: 0;
+    border-bottom: 2px solid #6CAEE0;
+}
+
+.form-labels-on-top .form-row > label span{
+    display: block;
+    box-sizing: border-box;
+    color:  #5f5f5f;
+    width: 300px;
+    padding: 0 0 12px;
+}
+
+#submitButton{
+  color: #ffffff;
+  text-align:center;
+  padding: 10px 100px;
+}
+.form-labels-on-top input{
+    color:  #5f5f5f;
+    box-sizing: border-box;
+    width: 300px;
+    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);
+    padding: 12px 18px;
+    border: 1px solid #dbdbdb;
+}
+.form-labels-on-top textarea{
+    color:  #5f5f5f;
+    box-sizing: border-box;
+    width: 350px;
+    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);
+    padding: 12px 18px;
+    border: 1px solid #dbdbdb;
+}
+
+.form-labels-on-top input[type=radio],
+.form-labels-on-top input[type=checkbox]{
+    box-shadow: none;
+    width: auto;
+}
+
+.form-labels-on-top select{
+    background-color: #ffffff;
+    color:  #5f5f5f;
+    box-sizing: border-box;
+    width: 240px;
+    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);
+    padding: 12px 18px;
+    border: 1px solid #dbdbdb;
+}
+
+.form-labels-on-top .form-radio-buttons > div{
+    margin-bottom: 10px;
+}
+
+.form-labels-on-top .form-radio-buttons label span{
+    margin-left: 8px;
+    color:  #5f5f5f;
+    font-weight: normal;
+}
+
+.form-labels-on-top .form-radio-buttons input{
+    width: auto;
+}
+
+.form-labels-on-top button{
+    border-radius: 2px;
+    background-color:  #6caee0;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);
+    padding: 14px 22px;
+    border: 0;
+    margin-top: 15px;
+}
+
+/*	Making the form responsive. Remove this media query
+    if you don't need the form to work on mobile devices. */
+
+@media (max-width: 600px) {
+
+    .form-labels-on-top{
+        padding: 30px;
+    }
+
+    .form-labels-on-top input{
+        width: 240px;
+    }
+
+}
