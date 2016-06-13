@@ -109,7 +109,7 @@ def main():
     parser.add_argument('-dummy', '-d', action='store_true', help='If present, return dummy explanations')
     args = parser.parse_args()
     explainer = Explainer(args.dummy)
-    app.run(debug=True, port=8112)
+    app.run(debug=False, port=8112, host="0.0.0.0")
 
 if __name__ == '__main__':
     main()
