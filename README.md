@@ -4,8 +4,8 @@ Data, classifiers, and notebooks for the LIME demonstration at NAACL 2016
 
 ### Clone the repo and copy data
 
-    git clone git@github.com:marcotcr/naacl-demo.git
-    cd naacl-demo
+    git clone git@github.com:UW-MODE/naacl16-demo.git
+    cd naacl16-demo
 
 Download [the models](https://drive.google.com/open?id=0ByblrZgHugfYSFYyMVFReUtDRGs) and copy models.tar.gz to naacl-demo
 
