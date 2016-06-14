@@ -86,7 +86,7 @@ def main():
     computer = Computer()
     parser = argparse.ArgumentParser(description='Do some stuff')
     args = parser.parse_args()
-    app.run(debug=True, port=8113)
+    app.run(debug=False, port=8113, host="0.0.0.0")
 
 if __name__ == '__main__':
     main()
