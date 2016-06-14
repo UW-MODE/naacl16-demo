@@ -62,7 +62,7 @@ ul.tab {
     -webkit-border-radius: 8;
     -moz-border-radius: 8;
     border-radius: 8px;
-    overflow: scroll;
+    overflow: auto;
 }
 
 /* Float the list items side by side */
