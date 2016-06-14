@@ -62,6 +62,7 @@ ul.tab {
     -webkit-border-radius: 8;
     -moz-border-radius: 8;
     border-radius: 8px;
+    overflow: scroll;
 }
 
 /* Float the list items side by side */
@@ -76,6 +77,7 @@ ul.tab li a {
     text-decoration: none;
     transition: 0.3s;
     font-size: 17px;
+    width:120px;
 }
 
 /* Change background color of links on hover */
@@ -98,7 +100,7 @@ ul.tab li a:focus, .active {background-color: #ccc;}
 }
 
 #suggestions_div{
-  width: 300px;
+  width: 350px;
   height:100%;
   float:left;
 }

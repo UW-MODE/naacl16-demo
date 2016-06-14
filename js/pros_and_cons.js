@@ -118,11 +118,15 @@ class ProsAndCons {
       let match = document.createElement(highlight_tag);
       match.appendChild(document.createTextNode(word));
       match.style.backgroundColor = colors[obj.label];
-      let after = node.splitText(start);
-      after.nodeValue = after.nodeValue.substring(word.length);
-      node.parentNode.insertBefore(match, after);
-      subtract += end;
-      node = after;
+      try {
+        let after = node.splitText(start);
+        after.nodeValue = after.nodeValue.substring(word.length);
+        node.parentNode.insertBefore(match, after);
+        subtract += end;
+        node = after;
+      }
+      catch (err){
+      }
     }
   }
   wordlists_to_positions(word_lists, raw_text) {

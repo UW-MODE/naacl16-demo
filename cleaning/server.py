@@ -60,13 +60,13 @@ class Computer:
         K = np.min(np.bincount(new_labels))
         self.new_data=self.vectorizer.transform(train_dataz[:K] + train_dataz[-K:])
         self.new_labels = np.hstack((train_labelsz[:K], train_labelsz[-K:]))
-        self.old_accuracy = sklearn.metrics.accuracy_score(self.new_labels, svm.predict(self.new_data))
+        self.old_accuracy = sklearn.metrics.accuracy_score(self.new_labels, svm.predict(self.new_data)) * 100
     def accuracy(self, bad_words):
         stopwords = bad_words.split(',')
         clean_train_vectors = clean_vectors_wordlist(self.train_vectors, self.vectorizer, stopwords)
         svm = sklearn.svm.SVC(probability=True, kernel='rbf', C=10,gamma=0.001)               
         svm.fit(clean_train_vectors, self.train_labels)                                                  
-        return sklearn.metrics.accuracy_score(self.new_labels, svm.predict(self.new_data))
+        return sklearn.metrics.accuracy_score(self.new_labels, svm.predict(self.new_data)) * 100
         
 @app.route('/')
 def index():

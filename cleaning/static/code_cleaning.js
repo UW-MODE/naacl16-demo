@@ -113,12 +113,12 @@ var DrawSkeletons = function() {
   d3.select('#submitButton').on('click', function() {
     badwords = d3.select('#badwords').node().value
     params = JSON.stringify({'bad_words' : badwords})
-    d3.select("#RESPONSE_old").text('computing')
+    //d3.select("#RESPONSE_old").text('computing')
     d3.select("#RESPONSE_new").text('computing')
     d3.xhr("api/finish", "application/json").post(params, function(error, data) {
       ret_data = JSON.parse(data.responseText);
-      d3.select('#RESPONSE_old').text(ret_data['old_accuracy'].toFixed(3));
-      d3.select('#RESPONSE_new').text(ret_data['new_accuracy'].toFixed(3));
+      //d3.select('#RESPONSE_old').text(ret_data['old_accuracy'].toFixed(3));
+      d3.select('#RESPONSE_new').text(ret_data['new_accuracy'].toFixed(3) + '%');
     });
   })
 }

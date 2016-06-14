@@ -53,8 +53,9 @@ class Barchart {
     let names = exp_array.map(v => v[0]);
     let weights = exp_array.map(v => v[1]);
     let max_weight = Math.max(...(weights.map(v=>Math.abs(v))));
+    // This is a hack to make bars larger for demo
     let xscale = d3.scale.linear()
-          .domain([0,Math.max(1, max_weight)])
+          .domain([0,Math.max(.6, max_weight)])
           .range([0, bar_width]);
     
     for (var i = 0; i < exp_array.length; ++i) {

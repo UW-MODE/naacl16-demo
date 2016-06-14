@@ -120,24 +120,25 @@ var lime =
 	    button.classed('btn', true);
 	    button.text('Explain');
 	    button.on('click', function () {
-	      return _this.send_request();
+	      _this.send_request();_this.true_class = -1;
 	    });
 	
 	    // Text area
 	    this.textarea = _d2.default.select('#input_text_div').append('textarea').style('width', '100%').style('height', '100%');
 	
 	    // Build sides
-	    this.model_options = { '20ng': ['none', 'Logistic Regression', 'Random Forest', 'SVM RBF'],
+	    this.model_options = { '20ng': ['none', 'Logistic Regression', 'Random Forest', 'Word2vec RF', 'SVM RBF', 'Clean SVM'],
 	      'politeness': ['none', 'Logistic Regression', 'Random Forest', 'SVM RBF'],
 	      'sentiment': ['none', 'Logistic Regression', 'Random Forest', 'NN on Embeddings'] };
-	    this.model_map = { 'none': 'none', 'Logistic Regression': 'lr', 'Random Forest': 'rf', 'SVM RBF': 'svm', 'NN on Embeddings': 'nn' };
+	    this.model_map = { 'none': 'none', 'Logistic Regression': 'lr', 'Random Forest': 'rf', 'SVM RBF': 'svm', 'NN on Embeddings': 'nn', 'Clean SVM': 'cleansvm', 'Word2vec RF': 'rfemb' };
 	    this.build_side(this.left, '#left_model_div');
 	    this.build_side(this.right, '#right_model_div');
 	    this.update_side('left', '', '');
 	    this.update_side('right', '', '');
 	
 	    _d2.default.json("static/suggestions.json", function (error, json) {
-	      self.suggestions = json;
+	      self.suggestions = json['suggestions'];
+	      self.accuracy = json['accuracy'];
 	      self.update_dataset('Religion');
 	    });
 	  }
@@ -146,13 +147,17 @@ var lime =
 	    key: 'update_dataset',
 	    value: function update_dataset(dataset) {
 	      this.dataset = this.dataset_map[dataset];
-	      this.update_suggestions();
 	      this.update_model_options(this.left);
 	      this.update_model_options(this.right);
+	      this.left.model_select.property('value', 'Logistic Regression');
+	      this.right.model_select.property('value', 'none');
+	      this.model_left = 'lr';
+	      this.model_right = 'none';
+	      this.update_suggestions();
 	      this.left.predict_proba.names = this.class_names[this.dataset];
 	      this.right.predict_proba.names = this.class_names[this.dataset];
-	      this.left.model_select.property('value', 'Logistic Regression');
 	      // Sends request
+	      this.true_class = this.current_suggestions[0]['true_class'];
 	      this.update_text(this.current_suggestions[0]['text']);
 	    }
 	  }, {
@@ -175,11 +180,22 @@ var lime =
 	      var sides = [];
 	      if (self.model_left != 'none') {
 	        sides.push(self.model_left);
+	        this.left.model_accuracy.text('Accuracy: ' + self.accuracy[self.dataset][self.model_left].toFixed(2));
 	      }
 	      if (self.model_right != 'none' && self.model_right != self.model_left) {
 	        sides.push(self.model_right);
+	        this.right.model_accuracy.text('Accuracy: ' + self.accuracy[self.dataset][self.model_right].toFixed(2));
 	      }
 	      sides.sort();
+	      var format_title = function format_title(x) {
+	        return x;
+	      };
+	      if (sides.length == 2 && sides[0] != self.model_left) {
+	        format_title = function format_title(x) {
+	          var text = x.split('-');
+	          return text[0].slice(0, text[0].length - 2) + text[1].slice(0, 2) + '-' + text[0].slice(-2) + ')';
+	        };
+	      }
 	      var model_comb = sides.join('-');
 	      var div = _d2.default.select('#suggestions_div');
 	      div.html('');
@@ -189,10 +205,11 @@ var lime =
 	      }
 	      self.current_suggestions = self.suggestions[self.dataset][model_comb];
 	      div.selectAll('li').data(self.suggestions[self.dataset][model_comb]).enter().append('li').append('a').classed('tablink', true).text(function (d) {
-	        return d['title'];
+	        return format_title(d['title']);
 	      }).on('click', function (d) {
 	        _d2.default.select('#suggestions_div').selectAll('a').classed('active', false);
 	        _d2.default.select(this).classed('active', true);
+	        self.true_class = d['true_class'];
 	        self.update_text(d['text']);
 	      });
 	    }
@@ -227,6 +244,7 @@ var lime =
 	  }, {
 	    key: 'update_side',
 	    value: function update_side(side, text, data) {
+	      var self = this;
 	      var empty = side == 'left' && this.model_left == 'none' || side == 'right' && this.model_right == 'none';
 	      var is_nn = side == 'left' && this.model_left == 'nn' || side == 'right' && this.model_right == 'nn';
 	      side = side == 'left' ? this.left : this.right;
@@ -239,7 +257,7 @@ var lime =
 	      side.exp_div.style('visibility', 'visible');
 	      side.pp_div.style('visibility', 'visible');
 	      side.text_div.style('visibility', 'visible');
-	      side.predict_proba.update(data['predict_proba']);
+	      side.predict_proba.update(data['predict_proba'], self.true_class);
 	      var linear_exp = {};
 	      linear_exp['word_weight'] = data['explanation'];
 	      linear_exp['class'] = 1;
@@ -252,7 +270,9 @@ var lime =
 	    value: function build_side(side_object, div_id) {
 	      var div = _d2.default.select(div_id).classed('model', true);
 	      var select_width = 130;
-	      side_object.model_select = div.append('div').style('float', 'left').style('width', select_width + 'px').append('select');
+	      var model_div = div.append('div').style('float', 'left').style('width', select_width + 'px');
+	      side_object.model_select = model_div.append('select');
+	      side_object.model_accuracy = model_div.append('div');
 	      var total_width = parseInt(div.style('width'));
 	      var pp_width = 200;
 	      var pp_div = div.append('div').style('width', pp_width + 'px').style('float', 'left');
@@ -9891,7 +9911,8 @@ var lime =
 	    this.space_between_bars = 5;
 	    this.bar_yshift = title === '' ? 0 : 35;
 	    var n_bars = 2;
-	    this.svg_height = n_bars * (this.bar_height + this.space_between_bars) + this.bar_yshift;
+	    var height_without_true_class = n_bars * (this.bar_height + this.space_between_bars) + this.bar_yshift;
+	    this.svg_height = height_without_true_class + 40;
 	    svg.style('height', this.svg_height + 'px');
 	    var this_object = this;
 	    if (title !== '') {
@@ -9901,7 +9922,11 @@ var lime =
 	      return (_this.bar_height + _this.space_between_bars) * i + _this.bar_yshift;
 	    };
 	    this.bar = svg.append("g");
+	
+	    this.true_class_text = this.bar.append('text').attr('y', height_without_true_class + 20).attr('x', 20).text('True Class:');
+	    this.true_class = this.bar.append('circle').attr('cy', height_without_true_class + 20).attr('cx', 130).attr('r', 15);
 	    this.update([0.1, .1]);
+	
 	    var _iteratorNormalCompletion = true;
 	    var _didIteratorError = false;
 	    var _iteratorError = undefined;
@@ -9912,6 +9937,7 @@ var lime =
 	
 	        this.bar.append("rect").attr("x", this.bar_x).attr("y", this.bar_y(i)).attr("height", this_object.bar_height).attr("width", bar_width - 1).attr("fill-opacity", 0).attr("stroke", "black");
 	      }
+	      //svg.append
 	    } catch (err) {
 	      _didIteratorError = true;
 	      _iteratorError = err;
@@ -9931,6 +9957,8 @@ var lime =
 	  _createClass(PredictProba, [{
 	    key: 'update',
 	    value: function update(predict_probas) {
+	      var true_class = arguments.length <= 1 || arguments[1] === undefined ? -1 : arguments[1];
+	
 	      var this_object = this;
 	      var names = this.names;
 	      var data = predict_probas;
@@ -9961,6 +9989,14 @@ var lime =
 	      }).attr("fill", "black").attr("text-anchor", "end").style("font", "14px tahoma, sans-serif").text(function (d, i) {
 	        return names[i];
 	      });
+	      if (true_class != -1) {
+	        this_object.true_class_text.style('visibility', 'visible');
+	        this_object.true_class.style('visibility', 'visible');
+	        this_object.true_class.style('fill', this_object.colors_i(true_class));
+	      } else {
+	        this_object.true_class_text.style('visibility', 'hidden');
+	        this_object.true_class.style('visibility', 'hidden');
+	      }
 	    }
 	  }]);
 	
@@ -26668,11 +26704,13 @@ var lime =
 	          var match = document.createElement(highlight_tag);
 	          match.appendChild(document.createTextNode(word));
 	          match.style.backgroundColor = colors[obj.label];
-	          var after = node.splitText(start);
-	          after.nodeValue = after.nodeValue.substring(word.length);
-	          node.parentNode.insertBefore(match, after);
-	          subtract += end;
-	          node = after;
+	          try {
+	            var after = node.splitText(start);
+	            after.nodeValue = after.nodeValue.substring(word.length);
+	            node.parentNode.insertBefore(match, after);
+	            subtract += end;
+	            node = after;
+	          } catch (err) {}
 	        }
 	      } catch (err) {
 	        _didIteratorError5 = true;
@@ -26805,7 +26843,8 @@ var lime =
 	  var max_weight = Math.max.apply(Math, _toConsumableArray(weights.map(function (v) {
 	    return Math.abs(v);
 	  })));
-	  var xscale = _d2.default.scale.linear().domain([0, Math.max(1, max_weight)]).range([0, bar_width]);
+	  // This is a hack to make bars larger for demo
+	  var xscale = _d2.default.scale.linear().domain([0, Math.max(.6, max_weight)]).range([0, bar_width]);
 	
 	  for (var i = 0; i < exp_array.length; ++i) {
 	    var name = names[i];
@@ -26863,7 +26902,7 @@ var lime =
 	
 	
 	// module
-	exports.push([module.id, "#models_div {\n  clear: both;\n}\n\n.model {\n  border: dashed 1px #ccc;\n  border-radius: 8px;\n  padding: 10px;\n}\n\n#left_model_div {\n  width: calc(50% - 30px);\n  float:left;\n  margin-right:2px;\n}\n#right_model_div {\n  width: calc(50% - 30px);\n  float:left;\n  margin-left:2px;\n}\n\n#top_part_div{\n  width:100%;\n  height:200px;\n  margin-bottom: 20px;\n  clear:both;\n}\n\n#datasets_div {\n  float:left;\n  clear:both;\n  width:99%;\n  height:30px;\n  margin-bottom: 10px;\n}\n\n#edit_div {\n  clear: both;\n  width: 100%;\n  height: calc(100% - 35px);\n  position: relative;\n}\n\n#explain_button_div {\n  /*width: 200px;*/\n  float:left;\n}\n\n#explain_button_div .btn {\n  bottom: 0;\n  position:absolute;\n}\n\n/* Style the list */\nul.tab {\n    list-style-type: none;\n    margin: 0;\n    padding: 0;\n    overflow: hidden;\n    border: 1px solid #ccc;\n    background-color: #f1f1f1;\n    -webkit-border-radius: 8;\n    -moz-border-radius: 8;\n    border-radius: 8px;\n}\n\n/* Float the list items side by side */\nul.tab li {float: left;}\n\n/* Style the links inside the list items */\nul.tab li a {\n    display: inline-block;\n    color: black;\n    text-align: center;\n    padding: 5px 16px;\n    text-decoration: none;\n    transition: 0.3s;\n    font-size: 17px;\n}\n\n/* Change background color of links on hover */\nul.tab li a:hover {background-color: #ddd;}\n\n/* Create an active/current tablink class */\nul.tab li a:focus, .active {background-color: #ccc;}\n\n#input_text_div {\n  width: 400px;\n  margin-left: 10px;\n  margin-right: 10px;\n  height:100%;\n  float:left;\n}\n#input_text_div textarea {\n  -webkit-border-radius: 8;\n  -moz-border-radius: 8;\n  border-radius: 8px;\n}\n\n#suggestions_div{\n  width: 300px;\n  height:100%;\n  float:left;\n}\n\n.lime {\n  all: initial;\n}\n.lime.text_div {\n  /*border-top: 1px solid #202020;\n  -webkit-box-shadow: 0px 1px 1px rgba(50, 50, 50, 0.75);\n  -moz-box-shadow:    0px 1px 1px rgba(50, 50, 50, 0.75);\n  box-shadow:         0px 1px 1px rgba(50, 50, 50, 0.75);*/\n\n\n  max-height:300px;\n  margin-top:10px;\n  overflow-y:scroll;\n  white-space:pre-wrap;\n}\n\n.btn {\n  border: 0px;\n  -webkit-border-radius: 8;\n  -moz-border-radius: 8;\n  border-radius: 8px;\n  font-family: Arial;\n  color: #ffffff;\n  font-size: 15px;\n  background: #38bd24;\n  padding: 5px 10px 5px 10px;\n  text-decoration: none;\n  margin: 3px;\n}\n\n.btn:hover {\n  background: #42d665;\n  text-decoration: none;\n}\n\n\n#loading {\n  position: fixed;\n  z-index: 999;\n  height: 2em;\n  width: 2em;\n  overflow: show;\n  margin: auto;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n/* Transparent Overlay */\n\n#loading:before {\n  content: '';\n  display: block;\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  background-color: rgba(0, 0, 0, 0.3);\n}\n/* :not(:required) hides these rules from IE9 and below */\n\n#loading:not(:required) {\n  /* hide \"loading...\" text */\n  \n  font: 0/0 a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n\n#loading:not(:required):after {\n  content: '';\n  display: block;\n  font-size: 10px;\n  width: 1em;\n  height: 1em;\n  margin-top: -0.5em;\n  -webkit-animation: spinner 1500ms infinite linear;\n  -moz-animation: spinner 1500ms infinite linear;\n  -ms-animation: spinner 1500ms infinite linear;\n  -o-animation: spinner 1500ms infinite linear;\n  animation: spinner 1500ms infinite linear;\n  border-radius: 0.5em;\n  -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;\n  box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;\n}\n/* Animation */\n\n@-webkit-keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@-moz-keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@-o-keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n", ""]);
+	exports.push([module.id, "#models_div {\n  clear: both;\n}\n\n.model {\n  border: dashed 1px #ccc;\n  border-radius: 8px;\n  padding: 10px;\n}\n\n#left_model_div {\n  width: calc(50% - 30px);\n  float:left;\n  margin-right:2px;\n}\n#right_model_div {\n  width: calc(50% - 30px);\n  float:left;\n  margin-left:2px;\n}\n\n#top_part_div{\n  width:100%;\n  height:200px;\n  margin-bottom: 20px;\n  clear:both;\n}\n\n#datasets_div {\n  float:left;\n  clear:both;\n  width:99%;\n  height:30px;\n  margin-bottom: 10px;\n}\n\n#edit_div {\n  clear: both;\n  width: 100%;\n  height: calc(100% - 35px);\n  position: relative;\n}\n\n#explain_button_div {\n  /*width: 200px;*/\n  float:left;\n}\n\n#explain_button_div .btn {\n  bottom: 0;\n  position:absolute;\n}\n\n/* Style the list */\nul.tab {\n    list-style-type: none;\n    margin: 0;\n    padding: 0;\n    overflow: hidden;\n    border: 1px solid #ccc;\n    background-color: #f1f1f1;\n    -webkit-border-radius: 8;\n    -moz-border-radius: 8;\n    border-radius: 8px;\n    overflow: scroll;\n}\n\n/* Float the list items side by side */\nul.tab li {float: left;}\n\n/* Style the links inside the list items */\nul.tab li a {\n    display: inline-block;\n    color: black;\n    text-align: center;\n    padding: 5px 16px;\n    text-decoration: none;\n    transition: 0.3s;\n    font-size: 17px;\n    width:120px;\n}\n\n/* Change background color of links on hover */\nul.tab li a:hover {background-color: #ddd;}\n\n/* Create an active/current tablink class */\nul.tab li a:focus, .active {background-color: #ccc;}\n\n#input_text_div {\n  width: 400px;\n  margin-left: 10px;\n  margin-right: 10px;\n  height:100%;\n  float:left;\n}\n#input_text_div textarea {\n  -webkit-border-radius: 8;\n  -moz-border-radius: 8;\n  border-radius: 8px;\n}\n\n#suggestions_div{\n  width: 350px;\n  height:100%;\n  float:left;\n}\n\n.lime {\n  all: initial;\n}\n.lime.text_div {\n  /*border-top: 1px solid #202020;\n  -webkit-box-shadow: 0px 1px 1px rgba(50, 50, 50, 0.75);\n  -moz-box-shadow:    0px 1px 1px rgba(50, 50, 50, 0.75);\n  box-shadow:         0px 1px 1px rgba(50, 50, 50, 0.75);*/\n\n\n  max-height:300px;\n  margin-top:10px;\n  overflow-y:scroll;\n  white-space:pre-wrap;\n}\n\n.btn {\n  border: 0px;\n  -webkit-border-radius: 8;\n  -moz-border-radius: 8;\n  border-radius: 8px;\n  font-family: Arial;\n  color: #ffffff;\n  font-size: 15px;\n  background: #38bd24;\n  padding: 5px 10px 5px 10px;\n  text-decoration: none;\n  margin: 3px;\n}\n\n.btn:hover {\n  background: #42d665;\n  text-decoration: none;\n}\n\n\n#loading {\n  position: fixed;\n  z-index: 999;\n  height: 2em;\n  width: 2em;\n  overflow: show;\n  margin: auto;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n/* Transparent Overlay */\n\n#loading:before {\n  content: '';\n  display: block;\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  background-color: rgba(0, 0, 0, 0.3);\n}\n/* :not(:required) hides these rules from IE9 and below */\n\n#loading:not(:required) {\n  /* hide \"loading...\" text */\n  \n  font: 0/0 a;\n  color: transparent;\n  text-shadow: none;\n  background-color: transparent;\n  border: 0;\n}\n\n#loading:not(:required):after {\n  content: '';\n  display: block;\n  font-size: 10px;\n  width: 1em;\n  height: 1em;\n  margin-top: -0.5em;\n  -webkit-animation: spinner 1500ms infinite linear;\n  -moz-animation: spinner 1500ms infinite linear;\n  -ms-animation: spinner 1500ms infinite linear;\n  -o-animation: spinner 1500ms infinite linear;\n  animation: spinner 1500ms infinite linear;\n  border-radius: 0.5em;\n  -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;\n  box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;\n}\n/* Animation */\n\n@-webkit-keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@-moz-keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@-o-keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@keyframes spinner {\n  0% {\n    -webkit-transform: rotate(0deg);\n    -moz-transform: rotate(0deg);\n    -ms-transform: rotate(0deg);\n    -o-transform: rotate(0deg);\n    transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n    -moz-transform: rotate(360deg);\n    -ms-transform: rotate(360deg);\n    -o-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n", ""]);
 	
 	// exports
 

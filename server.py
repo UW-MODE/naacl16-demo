@@ -74,7 +74,7 @@ class Explainer:
         for d in self.models:
             self.class_names[d] = self.models[d]['class_names']
             self.real_models[d] = {}
-            for m in ['lr', 'rf', 'svm']:
+            for m in ['lr', 'rf', 'svm', 'cleansvm', 'rfemb']:
                 if m not in self.models[d]:
                     continue
                 self.real_models[d][m] = lime.lime_text.ScikitClassifier(self.models[d][m]['model'], self.models[d]['vectorizer'])
@@ -101,7 +101,8 @@ class Explainer:
         else:
             exp_list = exp.as_list(positions=True)
         pp = list(self.real_models[dataset][model].predict_proba([text])[0])
-        return {'explanation' : [('intercept', exp.intercept[1] - 0.5)] + exp_list, 'predict_proba' : pp}
+        #return {'explanation' : [('intercept', exp.intercept[1] - 0.5)] + exp_list, 'predict_proba' : pp}
+        return {'explanation' : exp_list, 'predict_proba' : pp}
 
 def main():
     global explainer

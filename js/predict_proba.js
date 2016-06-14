@@ -17,7 +17,8 @@ class PredictProba {
     this.space_between_bars = 5;
     this.bar_yshift= title === '' ? 0 : 35;
     let n_bars = 2;
-    this.svg_height = n_bars * (this.bar_height + this.space_between_bars) + this.bar_yshift;
+    let height_without_true_class = n_bars * (this.bar_height + this.space_between_bars) + this.bar_yshift;
+    this.svg_height = height_without_true_class + 40
     svg.style('height', this.svg_height + 'px');
     let this_object = this;
     if (title !== '') {
@@ -28,7 +29,17 @@ class PredictProba {
     }
     this.bar_y = i => (this.bar_height + this.space_between_bars) * i + this.bar_yshift;
     this.bar = svg.append("g");
+
+    this.true_class_text = this.bar.append('text')
+        .attr('y', height_without_true_class + 20)
+        .attr('x', 20)
+        .text('True Class:')
+    this.true_class = this.bar.append('circle')
+        .attr('cy', height_without_true_class + 20)
+        .attr('cx', 130)
+        .attr('r', 15)
     this.update([0.1,.1])
+
     for (let i of range(2)) {
       this.bar.append("rect").attr("x", this.bar_x)
           .attr("y", this.bar_y(i))
@@ -37,8 +48,9 @@ class PredictProba {
           .attr("fill-opacity", 0)
           .attr("stroke", "black");
     }
+    //svg.append
   }
-  update(predict_probas) {
+  update(predict_probas, true_class=-1) {
     let this_object = this;
     let names = this.names
     let data = predict_probas
@@ -66,6 +78,15 @@ class PredictProba {
           .attr("text-anchor", "end")
           .style("font", "14px tahoma, sans-serif")
           .text((d, i) => names[i]);
+    if (true_class != -1) {
+      this_object.true_class_text.style('visibility', 'visible');
+      this_object.true_class.style('visibility', 'visible');
+      this_object.true_class.style('fill', this_object.colors_i(true_class));
+    }
+    else {
+      this_object.true_class_text.style('visibility', 'hidden');
+      this_object.true_class.style('visibility', 'hidden');
+    }
   }
 }
 export default PredictProba;

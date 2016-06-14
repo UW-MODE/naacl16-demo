@@ -28,35 +28,40 @@ class Visualization {
     let button = d3.select('#explain_button_div').append('button')
     button.classed('btn', true)
     button.text('Explain')
-    button.on('click', () => this.send_request());
+    button.on('click', () => {this.send_request(); this.true_class=-1;});
     
     // Text area
     this.textarea = d3.select('#input_text_div').append('textarea').style('width', '100%').style('height', '100%');
 
     // Build sides
-    this.model_options = {'20ng' : ['none', 'Logistic Regression', 'Random Forest', 'SVM RBF'], 
+    this.model_options = {'20ng' : ['none', 'Logistic Regression', 'Random Forest', 'Word2vec RF', 'SVM RBF', 'Clean SVM'], 
       'politeness' : ['none', 'Logistic Regression', 'Random Forest', 'SVM RBF'], 
       'sentiment' : ['none', 'Logistic Regression', 'Random Forest', 'NN on Embeddings']};
-    this.model_map = {'none' : 'none', 'Logistic Regression' : 'lr', 'Random Forest' : 'rf', 'SVM RBF' : 'svm', 'NN on Embeddings' : 'nn'} 
+    this.model_map = {'none' : 'none', 'Logistic Regression' : 'lr', 'Random Forest' : 'rf', 'SVM RBF' : 'svm', 'NN on Embeddings' : 'nn', 'Clean SVM' : 'cleansvm', 'Word2vec RF' : 'rfemb'} 
     this.build_side(this.left, '#left_model_div');
     this.build_side(this.right, '#right_model_div');
     this.update_side('left', '', '')
     this.update_side('right', '', '')
 
     d3.json("static/suggestions.json", function(error, json) {
-      self.suggestions = json;
+      self.suggestions = json['suggestions'];
+      self.accuracy = json['accuracy'];
       self.update_dataset('Religion');
     })
   }
   update_dataset(dataset) {
     this.dataset = this.dataset_map[dataset];
-    this.update_suggestions()
     this.update_model_options(this.left);
     this.update_model_options(this.right);
+    this.left.model_select.property('value', 'Logistic Regression');
+    this.right.model_select.property('value', 'none');
+    this.model_left = 'lr';
+    this.model_right = 'none';
+    this.update_suggestions()
     this.left.predict_proba.names = this.class_names[this.dataset]
     this.right.predict_proba.names = this.class_names[this.dataset]
-    this.left.model_select.property('value', 'Logistic Regression');
     // Sends request
+    this.true_class = this.current_suggestions[0]['true_class']
     this.update_text(this.current_suggestions[0]['text']);
   }
   update_model_options(side_object) {
@@ -76,11 +81,20 @@ class Visualization {
     let sides = []
     if (self.model_left != 'none') {
       sides.push(self.model_left);
+      this.left.model_accuracy.text('Accuracy: ' + self.accuracy[self.dataset][self.model_left].toFixed(2));
     }
     if (self.model_right != 'none' && self.model_right != self.model_left) {
       sides.push(self.model_right);
+      this.right.model_accuracy.text('Accuracy: ' +self.accuracy[self.dataset][self.model_right].toFixed(2));
     }
     sides.sort()
+    let format_title = x => x;
+    if (sides.length == 2 && sides[0] != self.model_left) {
+      format_title = function(x) {
+        let text = x.split('-')
+        return text[0].slice(0, text[0].length - 2) + text[1].slice(0,2) + '-' + text[0].slice(-2) + ')';
+      }
+    }
     let model_comb = sides.join('-');
     let div = d3.select('#suggestions_div');
     div.html('');
@@ -93,11 +107,12 @@ class Visualization {
        .enter().append('li')
        .append('a')
        .classed('tablink', true)
-       .text(d => d['title'])
+       .text(d => format_title(d['title']))
        .on('click', function(d) {
           d3.select('#suggestions_div').selectAll('a').classed('active', false);
           d3.select(this).classed('active', true);
-         self.update_text(d['text'])
+          self.true_class = d['true_class']
+          self.update_text(d['text'])
        });
   }
   update_text(text) {
@@ -125,6 +140,7 @@ class Visualization {
     })
   }
   update_side(side, text, data) {
+    let self = this;
     let empty = ((side == 'left' && this.model_left == 'none') || (side == 'right' && this.model_right == 'none'));
     let is_nn = (side == 'left' && this.model_left == 'nn') || (side == 'right' && this.model_right == 'nn');
     side = side == 'left' ? this.left : this.right;
@@ -137,7 +153,7 @@ class Visualization {
     side.exp_div.style('visibility', 'visible');
     side.pp_div.style('visibility', 'visible');
     side.text_div.style('visibility', 'visible');
-    side.predict_proba.update(data['predict_proba'])
+    side.predict_proba.update(data['predict_proba'], self.true_class)
     let linear_exp = {}
     linear_exp['word_weight'] = data['explanation']
     linear_exp['class'] = 1;
@@ -148,7 +164,9 @@ class Visualization {
   build_side(side_object, div_id) {
     let div = d3.select(div_id).classed('model', true);
     let select_width = 130;
-    side_object.model_select = div.append('div').style('float', 'left').style('width', select_width + 'px').append('select');
+    let model_div = div.append('div').style('float', 'left').style('width', select_width + 'px')
+    side_object.model_select = model_div.append('select');
+    side_object.model_accuracy = model_div.append('div');
     let total_width = parseInt(div.style('width'))
     let pp_width = 200;
     let pp_div = div.append('div').style('width', `${pp_width}px`).style('float', 'left');
