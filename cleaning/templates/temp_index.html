@@ -1,0 +1,124 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="static/d3.min.js"></script>
+    <script type="text/javascript" src="static/lodash.js"></script>
+    <script type="text/javascript" src="static/classes.js"></script>
+    <script type="text/javascript" src="static/horizontal_barplot.js"></script>
+    <script type="text/javascript" src="static/feature_contributions.js"></script>
+    <script type="text/javascript" src="static/exp2_local.json"></script>
+    <script type="text/javascript" src="static/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="static/trip.min.js"></script>
+    <script type="text/javascript" src="static/intro.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/style.css" />
+    <link rel="stylesheet" type="text/css" href="static/trip.min.css" />
+</head>
+
+<body>
+<div id="intro">
+<p>
+Hello! </p>
+<p>
+We have an algorithm that distinguishes between 'Atheism' or 'Christianity'
+documents. We hope you can help us improve it.</p>
+
+<p>We will show you some documents, and words in those documents that the 
+algorithm thinks are important to distinguish between these topics. Your task is
+to click on the words you think the algorithm is using incorrectly - i.e. the
+words that are not important to distinguish between these topics.</p>
+
+<p> There is a form after 10 documents for you to fill in order to complete the
+HIT. Please click on ALL of the words you think the algorithm should not be
+using.</p>
+<button class="btn" onClick='Start();'>Ok, let's do this</button>
+</div>
+<div id="fixed-header">
+  <div id="instance_info">
+      <div class="form_stuff example box">
+      Response form
+      </div>
+    <div class="box example" id="example_counter">
+      Example <span class="example_id" id="current_example">#1</span> of <span class="example_id" id="n_examples">0</span>
+    </div>
+    <div class="box">
+      <div class="box true_class">
+        True Class: 
+      </div>
+      <svg id="true_class_svg"> </svg>
+    </div>
+    <div class="button-group box">
+      <button class="btn" onClick='Instructions();'>Instructions</button>
+      <button class="btn" onClick='Previous();'>Previous</button>
+      <button class="btn" onClick='Next();'>Next</button>
+    </div>
+  </div>
+</div>
+<div id="form_div" class="form_stuff">
+  <form name='mturk_form' class="form-labels-on-top">
+    <div class="form-title-row">
+      <h1>FORM</h1>
+    </div>
+    <input type='hidden' value='' name='instance_ids' id='instance_ids' />
+    <input type='hidden' value='' name='badwords' id='badwords' />
+    <input type='hidden' value='PREVIOUS_ID_HERE' name='previous_id' />
+    <div class="form-row">
+      <label>
+        <span>These are the words that you selected as NOT being important to
+        distinguish between Atheism and Christianity. Please make sure of your
+        selection.</span>
+      </label>
+      <div id="selected_features">
+      </div>
+    </div>
+  <br />
+  <span class="btn" id='submitButton'>Submit</span>
+  <div id="response" class="form-row">
+  Old Accuracy: <span id="RESPONSE_old">57.81%</span> <br />
+  New Accuracy: <span id="RESPONSE_new">click Submit to see</span>
+  </div>
+  </form>
+  
+</div>
+
+<div class="explanations">
+  <div id="c1" class='classifier'>
+    <div class="classifier_header">
+      <!-- Algorithm 1 -->
+    </div>
+    <table>
+      <tr>
+        <th>Words that the algorithm considers important. </th>
+        <!-- <th><br /><br /><br /><br />Predicted:</th>-->
+      </tr>
+      <tr>
+        <td><div id="explain1"></div>        </td>
+        <td>
+        Bar length indicates
+        importance, and color indicates to which topic: Christianity (green) or
+        Atheism (Pink).
+          <svg class="pred"></svg>
+          <!-- <span style="font-weight:bold">Prediction correct:</span> -->
+          <svg class="correct_mark"></svg>
+        </td>
+      </tr>
+    </table>
+<div class='space'>Please click on the words (right next to the bars) that
+        you think the algorithm is using incorrectly, because they are
+        not important to distinguish between Atheism and Christianity. They
+        should be red and crossed off after you click them.</div>
+
+  </div>
+</div>
+
+<div id="explain_text_div">
+  <div class="explain_text">
+    <div class="title">Document</div>
+    <div id="text1"></div>
+  </div>
+</div>
+
+<script type="text/javascript" src="static/code_cleaning.js"></script>
+</body>
+
+</html>
+
