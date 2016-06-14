@@ -19,3 +19,14 @@
     cd cleaning
     python server.py
 
+### How we trained the models / data / etc
+
+- getting embeddings:ver Getting word2vec stuff notebook
+- Run the following
+
+        python learn_models.py                                                                    
+        python run_submodular.py
+        cd cleaning
+        python generage_json.py
+                                                                                                                                                                    
+~                                                                                                                                                                                    
